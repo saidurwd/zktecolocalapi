@@ -5,7 +5,7 @@
     $sql_data  = "SELECT U.`Badgenumber` AS employee_id, DATE_FORMAT(C.CHECKTIME, '%d-%m-%Y') AS attendance_date, MIN(DATE_FORMAT(C.CHECKTIME, '%H:%i:%s')) AS clock_in, MAX(DATE_FORMAT(C.CHECKTIME, '%H:%i:%s')) AS clock_out, 'Add' AS 'action'
     FROM CHECKINOUT  C
     LEFT JOIN USERINFO U ON U.USERID=C.USERID
-    GROUP BY DATE_FORMAT(C.CHECKTIME, '%Y-%m-%d'), U.`Badgenumber` ORDER BY C.CHECKTIME DESC, U.`Badgenumber` ASC LIMIT 2";
+    GROUP BY DATE_FORMAT(C.CHECKTIME, '%Y-%m-%d'), U.`Badgenumber` ORDER BY C.CHECKTIME DESC, U.`Badgenumber` ASC";
     $result = $conn->query($sql_data);
 	
     $response = array();
