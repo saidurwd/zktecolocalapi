@@ -41,7 +41,7 @@
 					},
 					//crossDomain:true,
 					success: function(data) {
-						console.log(data);
+						//console.log(data);
 					}
 				});
 			});
