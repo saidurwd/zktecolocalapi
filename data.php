@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Attendance DATA Export!</title>
-<!--    <meta http-equiv="refresh" content="3600">-->
+    <!--    <meta http-equiv="refresh" content="3600">-->
 </head>
 <body>
 <h2 style="text-align:center;margin-top:100px;">Attendance DATA Export!</h2>
@@ -13,7 +13,10 @@ require 'dbconn_mysql.php';
 require 'dbconn_access.php';
 require 'dbconnection.php';
 
-$sql_access = "SELECT USERID, CHECKTIME, CHECKTYPE, VERIFYCODE, SENSORID, Memoinfo, WorkCode, sn, UserExtFmt FROM CHECKINOUT";
+$today = date("Y-m-d");
+//$today = '2023-09-19';
+
+$sql_access = "SELECT USERID, CHECKTIME, CHECKTYPE, VERIFYCODE, SENSORID, Memoinfo, WorkCode, sn, UserExtFmt FROM CHECKINOUT WHERE FORMAT(CHECKTIME,'yyyyMMdd') = FORMAT('" . $today . "', 'yyyyMMdd')";
 $result_access = $db->query($sql_access);
 while ($val = $result_access->fetch()) {
     $date = new DateTimeImmutable($val['CHECKTIME']);
@@ -37,25 +40,29 @@ while ($val = $result_access->fetch()) {
             $sql = "INSERT INTO `checkinout` (`USERID`, `CHECKTIME`, `CHECKTYPE`, `VERIFYCODE`, `SENSORID`, `Memoinfo`, `WorkCode`, `sn`, `UserExtFmt`) VALUES ('$USERID', '$CHECKTIME', '$CHECKTYPE', '$VERIFYCODE', '$SENSORID', '$Memoinfo', '$WorkCode', '$sn', '$UserExtFmt')";
             $conn->query($sql);
             //delete data from device
-            $db->query("DELETE FROM CHECKINOUT WHERE USERID = $USERID");
+            //$db->query("DELETE FROM CHECKINOUT WHERE USERID = $USERID");
         } catch (PDOException $e) {
             echo $sql . "<br>" . $e->getMessage();
         }
     }
-    //Store data live
-    $sqlLocal = "SELECT * FROM checkinout WHERE `status`='Pending'";
-    $resultLocal = $conn->query($sqlLocal);
-    while ($rowLive = $resultLocal->fetch_assoc()) {
-        //duplicate check live
-        $resultDuplicate = $connection->query("SELECT USERID FROM  checkinout WHERE USERID=" . $USERID . " AND CHECKTIME='" . $CHECKTIME . "'");
-        $total_rows_live = $resultDuplicate->num_rows;
-        if ($total_rows_live <= 0) {
-            $sqlLive = "INSERT INTO `checkinout` (`USERID`, `CHECKTIME`, `CHECKTYPE`, `VERIFYCODE`, `SENSORID`, `Memoinfo`, `WorkCode`, `sn`, `UserExtFmt`) VALUES ('" . $rowLive['USERID'] . "', '" . $rowLive['CHECKTIME'] . "', '" . $rowLive['CHECKTYPE'] . "', '" . $rowLive['VERIFYCODE'] . "', '" . $rowLive['SENSORID'] . "', '" . $rowLive['Memoinfo'] . "', '" . $rowLive['WorkCode'] . "', '" . $rowLive['sn'] . "', '" . $rowLive['UserExtFmt'] . "')";
-            $connection->query($sqlLive);
-            //update local
-            $sqlUpdate = "UPDATE `checkinout` SET `status`='Exported' WHERE id= '" . $rowLive['id'] . "'";
-            $conn->query($sqlUpdate);
-        }
+}
+
+//Store data live
+$sqlLocal = "SELECT * FROM checkinout WHERE DATE_FORMAT(CHECKTIME, '%Y-%m-%d') = DATE_FORMAT('" . $today . "', '%Y-%m-%d')";
+$resultLocal = $conn->query($sqlLocal);
+while ($rowLive = $resultLocal->fetch_assoc()) {
+    $dateL = new DateTimeImmutable($rowLive['CHECKTIME']);
+    $USERIDL = $rowLive['USERID'];
+    $CHECKTIMEL = $dateL->format('Y-m-d H:i:s');
+    //duplicate check live
+    $resultDuplicate = $connection->query("SELECT USERID FROM  checkinout WHERE USERID=" . $USERIDL . " AND CHECKTIME='" . $CHECKTIMEL . "'");
+    $total_rows_live = $resultDuplicate->num_rows;
+    if ($total_rows_live <= 0) {
+        $sqlLive = "INSERT INTO `checkinout` (`USERID`, `CHECKTIME`, `CHECKTYPE`, `VERIFYCODE`, `SENSORID`, `Memoinfo`, `WorkCode`, `sn`, `UserExtFmt`) VALUES ('" . $rowLive['USERID'] . "', '" . $rowLive['CHECKTIME'] . "', '" . $rowLive['CHECKTYPE'] . "', '" . $rowLive['VERIFYCODE'] . "', '" . $rowLive['SENSORID'] . "', '" . $rowLive['Memoinfo'] . "', '" . $rowLive['WorkCode'] . "', '" . $rowLive['sn'] . "', '" . $rowLive['UserExtFmt'] . "')";
+        $connection->query($sqlLive);
+        //update local
+        $sqlUpdate = "UPDATE `checkinout` SET `status`='Exported' WHERE id= '" . $rowLive['id'] . "'";
+        $conn->query($sqlUpdate);
     }
 }
 ?>
