@@ -2,30 +2,62 @@
 <html>
 
 <head>
-    <title>Attendance DATA Export!</title>
-    <!--    <meta http-equiv="refresh" content="3600">-->
+    <title>Attendance data upload</title>
+    <meta http-equiv="refresh" content="3600">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-alpha3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 
 <body>
-    <h2 style="text-align:center;margin-top:100px;">Attendance DATA Export!</h2>
-    <form action="" method="POST">
-        <label for="fname">Date (YYYY-MM-DD): </label>
-        <input type="text" id="today" name="today" value="">
-        <input type="submit" value="Submit">
-    </form>
+    <?php
+    if (empty($_REQUEST['today'])) {
+        $today = date("Y-m-d");
+    } else {
+        $today = $_REQUEST['today'];
+    }
+    ?>
+    <section class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <h2 class="py-2">Attendance DATA Export!</h2>
+                <form class="row" action="" method="POST" id="form_upload">
+                    <label for="date" class="col-1 col-form-label"><strong>Date</strong></label>
+                    <div class="col-5">
+                        <div class="input-group date" id="datepicker">
+                            <input type="text" class="form-control" id="today" name="today" value="<?= $today ?>"
+                                placeholder="YYYY-MM-DD" />
+                            <span class="input-group-append">
+                                <span class="input-group-text bg-light d-block">
+                                    <i class="fa fa-calendar"></i>
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <input type="submit" class="btn btn-success" value="Submit" id="data_export">
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row mt-3" id="data_progress" style="display:none;">
+            <div class="col-sm-8">
+                <div class="progress" style="height:35px;font-size:16px;">
+                    <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar"
+                        aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width:60%">
+                        Attendance data uploading. Please wait...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
     <?php
     set_time_limit(0);
     date_default_timezone_set("Asia/Dhaka");
     require 'dbconn_mysql.php';
     require 'dbconn_access.php';
     require 'dbconnection.php';
-
-    if (empty($_REQUEST['today'])) {
-        $today = date("Y-m-d");
-        //$today = '2023-10-16';
-    } else {
-        $today = $_REQUEST['today'];
-    }
 
     $sql_access = "SELECT USERID, CHECKTIME, CHECKTYPE, VERIFYCODE, SENSORID, Memoinfo, WorkCode, sn, UserExtFmt FROM CHECKINOUT WHERE FORMAT(CHECKTIME,'yyyyMMdd') = FORMAT('" . $today . "', 'yyyyMMdd')";
     $result_access = $db->query($sql_access);
@@ -77,6 +109,26 @@
         }
     }
     ?>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.min.js"></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script>
+        $(function () {
+            $('#datepicker').datepicker({
+                format: 'yyyy-mm-dd'
+            });
+        });
+        $(document).ready(function () {
+            $('#form_upload').submit(function () {
+                $("input[type='submit']", this)
+                    .val("Please Wait...")
+                    .attr('disabled', 'disabled');
+                $("#data_progress").show();
+                return true;
+            });
+        });
+    </script>
 </body>
 
 </html>
